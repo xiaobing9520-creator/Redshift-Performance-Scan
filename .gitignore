@@ -1,0 +1,2 @@
+# Local settings (contain user-specific permissions)
+.claude/settings.local.json
