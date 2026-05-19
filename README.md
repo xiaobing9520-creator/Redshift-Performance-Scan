@@ -110,13 +110,13 @@ To change region or profile, edit `.mcp.json`.
 .claude/skills/redshift-scan/
 ├── SKILL.md                    # Skill definition (workflow instructions)
 └── references/
-    ├── diagnostic-queries.md   # 32 SQL queries by category
-    ├── rules-table-design.md   # 12 rules (TD-01..TD-12)
-    ├── rules-query-performance.md  # 10 rules (QP-01..QP-10)
+    ├── diagnostic-queries.md   # 42 SQL queries (A-G original + H from awslabs/amazon-redshift-utils)
+    ├── rules-table-design.md   # 17 rules (TD-01..TD-17)
+    ├── rules-query-performance.md  # 14 rules (QP-01..QP-14)
     ├── rules-workload-management.md # 6 rules (WL-01..WL-06)
-    ├── rules-maintenance.md    # 6 rules (MT-01..MT-06)
+    ├── rules-maintenance.md    # 7 rules (MT-01..MT-07)
     ├── rules-cluster-config.md # 3 rules (CC-01..CC-03)
-    ├── rules-data-loading.md   # 3 rules (DL-01..DL-03)
+    ├── rules-data-loading.md   # 4 rules (DL-01..DL-04)
     └── report-template.md      # Output format specification
 ```
 
@@ -124,12 +124,41 @@ To change region or profile, edit `.mcp.json`.
 
 | Category | Rules | Covers |
 |----------|-------|--------|
-| Table Design | TD-01 to TD-12 | Distribution keys, sort keys, encoding, VARCHAR sizing, constraints |
-| Query Performance | QP-01 to QP-10 | Nested loops, disk spill, skew, queue waits, caching |
+| Table Design | TD-01 to TD-17 | Distribution keys, sort keys, encoding, VARCHAR sizing, constraints, block skew, DK mismatch, predicate alignment, fragmentation, unscanned tables |
+| Query Performance | QP-01 to QP-14 | Nested loops, disk spill, skew, queue waits, caching, missing stats in EXPLAIN, per-table alert impact, QMR candidates |
 | Workload Management | WL-01 to WL-06 | Queue config, abort rates, SQA, concurrency scaling |
-| Maintenance | MT-01 to MT-06 | VACUUM, ANALYZE, ghost rows, disk space |
+| Maintenance | MT-01 to MT-07 | VACUUM, ANALYZE, ghost rows, disk space, fragmentation |
 | Cluster Config | CC-01 to CC-03 | Node count, disk capacity, result caching |
-| Data Loading | DL-01 to DL-03 | File parallelism, load errors, single-file loads |
+| Data Loading | DL-01 to DL-04 | File parallelism, load errors, single-file loads, S3 transfer throughput |
+
+## Rule Sources
+
+Rules are derived from two primary sources:
+
+### 1. AWS Official Documentation
+- [Redshift Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/best-practices.html)
+- [Table Design Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_designing-tables-best-practices.html)
+- [Query Performance Tuning](https://docs.aws.amazon.com/redshift/latest/dg/c-optimizing-query-performance.html)
+- [Workload Management](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-implementing-workload-management.html)
+- [Automatic Optimization](https://docs.aws.amazon.com/redshift/latest/dg/c_autonomics.html)
+- [Data Loading Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html)
+- [Query Best Practices (Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/welcome.html)
+- [Monitoring Performance](https://docs.aws.amazon.com/redshift/latest/mgmt/metrics.html)
+- [Redshift Spectrum Performance](https://docs.aws.amazon.com/redshift/latest/dg/c-spectrum-external-performance.html)
+
+### 2. awslabs/amazon-redshift-utils (Apache 2.0)
+- Repository: https://github.com/awslabs/amazon-redshift-utils (2800+ stars)
+- Enhanced diagnostic queries (Category H) adapted from:
+  - `src/AdminScripts/perf_alert.sql` — Per-table performance alert aggregation
+  - `src/AdminScripts/table_inspector.sql` — Block-level distribution skew analysis
+  - `src/AdminScripts/top_queries.sql` — Top queries with alert classification
+  - `src/AdminScripts/copy_performance.sql` — S3 transfer throughput analysis
+  - `src/AdminScripts/missing_table_stats.sql` — Missing stats in EXPLAIN plans
+  - `src/AdminScripts/predicate_columns.sql` — Sort key candidate identification
+  - `src/AdminScripts/unscanned_table_summary.sql` — Wasted storage detection
+  - `src/AdminScripts/insert_into_table_dk_mismatch.sql` — DK mismatch in ETL
+  - `src/AdminScripts/wlm_qmr_rule_candidates.sql` — P99 outlier QMR candidates
+  - `src/AdminViews/v_fragmentation_info.sql` — Table fragmentation estimation
 
 ## Extending Rules
 
@@ -140,19 +169,7 @@ To add a new rule:
    - Rule ID, Severity, Trigger Condition, Threshold
    - Diagnostic Queries Used (reference IDs from diagnostic-queries.md)
    - Observation Template, Recommendation, Remediation SQL
-   - Documentation Source (AWS docs URL)
+   - Documentation Source (AWS docs URL and/or github.com/awslabs/amazon-redshift-utils path)
 3. If the rule needs new diagnostic data, add a query to `diagnostic-queries.md`
 
 No code changes needed — the LLM reads and applies rules from markdown.
-
-## Documentation Sources
-
-All rules reference official AWS documentation:
-- [Redshift Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/best-practices.html)
-- [Table Design Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_designing-tables-best-practices.html)
-- [Query Performance Tuning](https://docs.aws.amazon.com/redshift/latest/dg/c-optimizing-query-performance.html)
-- [Workload Management](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-implementing-workload-management.html)
-- [Automatic Optimization](https://docs.aws.amazon.com/redshift/latest/dg/c_autonomics.html)
-- [Data Loading Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html)
-- [Query Best Practices (Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/welcome.html)
-- [Monitoring Performance](https://docs.aws.amazon.com/redshift/latest/mgmt/metrics.html)

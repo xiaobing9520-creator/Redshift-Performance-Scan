@@ -85,3 +85,28 @@ gzip part_*
 - https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html
 - Section: "Split your load data into multiple files"
 - Section: "Use a single COPY command to load from multiple files"
+
+---
+
+## DL-04: Low COPY Throughput (S3 Transfer Rate)
+
+**Severity**: MEDIUM
+**Category**: Data Loading
+**Trigger Condition**: COPY throughput < 10 MB/s for loads > 100MB
+**Diagnostic Queries**: H4
+
+**Observation Template**:
+> COPY operation (query {query}) transferred {size_mb}MB in {time_seconds}s ({mb_per_s} MB/s) from {n_files} files. Transfer rates below 10 MB/s indicate suboptimal COPY configuration.
+
+**Recommendation**:
+Improve COPY throughput:
+1. Compress files (GZIP, LZO, ZSTD) to reduce transfer volume
+2. Split into more files to parallel-load across slices
+3. Use columnar format (Parquet) for better compression
+4. Ensure S3 bucket is in the same region as the cluster
+5. Use manifest files for controlled parallel loads
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html
+- Section: "Compress your data files" and "Split your load data"
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/copy_performance.sql

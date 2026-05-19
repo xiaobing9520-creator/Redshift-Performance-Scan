@@ -26,6 +26,7 @@ Execute diagnostic queries from `references/diagnostic-queries.md` in this order
 5. **Category E** (Maintenance): 5 queries — vacuum candidates, stale stats, auto-optimization
 6. **Category F** (Data Loading): 3 queries — COPY performance, load errors
 7. **Category G** (Advisor): 1 query — built-in Redshift Advisor recommendations
+8. **Category H** (Enhanced from awslabs/amazon-redshift-utils): 10 queries — per-table alerts, block skew, predicate columns, unscanned tables, DK mismatch, fragmentation, QMR candidates, COPY throughput, missing stats in EXPLAIN
 
 Use `execute_query` for each. If a query fails (e.g., permission denied on a system table), log the error and continue with the remaining queries.
 
@@ -33,12 +34,12 @@ Use `execute_query` for each. If a query fails (e.g., permission denied on a sys
 
 Read the rule reference files and evaluate each rule against the collected data:
 
-- `references/rules-table-design.md` (12 rules: TD-01 through TD-12)
-- `references/rules-query-performance.md` (10 rules: QP-01 through QP-10)
+- `references/rules-table-design.md` (17 rules: TD-01 through TD-17)
+- `references/rules-query-performance.md` (14 rules: QP-01 through QP-14)
 - `references/rules-workload-management.md` (6 rules: WL-01 through WL-06)
-- `references/rules-maintenance.md` (6 rules: MT-01 through MT-06)
+- `references/rules-maintenance.md` (7 rules: MT-01 through MT-07)
 - `references/rules-cluster-config.md` (3 rules: CC-01 through CC-03)
-- `references/rules-data-loading.md` (3 rules: DL-01 through DL-03)
+- `references/rules-data-loading.md` (4 rules: DL-01 through DL-04)
 
 For each rule, check if the trigger condition is met based on the diagnostic data. If triggered, record the finding with severity, affected objects, and evidence.
 

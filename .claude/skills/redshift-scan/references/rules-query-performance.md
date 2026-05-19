@@ -229,3 +229,99 @@ Review the top slow queries for optimization opportunities:
 **Documentation Source**:
 - https://docs.aws.amazon.com/redshift/latest/dg/identify-queries-that-are-top-candidates-for-tuning.html
 - https://docs.aws.amazon.com/redshift/latest/dg/c-optimizing-query-performance.html
+
+---
+
+## QP-11: Missing Statistics Flagged in EXPLAIN Plans
+
+**Severity**: HIGH
+**Category**: Query Performance
+**Trigger Condition**: stl_explain contains nodes with 'missing statistics' text
+**Diagnostic Queries**: H5
+
+**Observation Template**:
+> {occurrence_count} EXPLAIN plan nodes flagged "missing statistics" for tables. The optimizer cannot generate efficient plans without current statistics.
+
+**Recommendation**:
+Run ANALYZE on all tables flagged with missing statistics. This is more reliable than checking stats_off in svv_table_info because it shows tables where the optimizer actually hit the problem during planning.
+
+**Remediation SQL**:
+```sql
+-- Analyze all tables (safest approach)
+ANALYZE;
+
+-- Or target specific tables from the plannode output
+ANALYZE {schema}.{table};
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/t_Analyzing_tables.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/missing_table_stats.sql
+
+---
+
+## QP-12: Per-Table Alert Impact Analysis
+
+**Severity**: HIGH
+**Category**: Query Performance
+**Trigger Condition**: Any table accumulating >30 minutes of alert-related overhead in 7 days
+**Diagnostic Queries**: H1
+
+**Observation Template**:
+> Table `{table}` has accumulated {minutes} minutes of performance alert overhead. Events: {event} ({occurrence_count} occurrences). Solution: {solution}
+
+**Recommendation**:
+This query shows the actual time cost of each performance alert per table. Focus optimization on tables with the highest accumulated alert minutes — these represent the biggest potential time savings.
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/c_designing-queries-best-practices.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/perf_alert.sql
+
+---
+
+## QP-13: Queries with Multiple Alert Types
+
+**Severity**: MEDIUM
+**Category**: Query Performance
+**Trigger Condition**: Queries appearing in H3 with multiple alert event types (Filter, Deleted, Nested Loop, Distributed, Broadcast, Stats)
+**Diagnostic Queries**: H3
+
+**Observation Template**:
+> Query (md5: {qry_md5}) runs {n_qry} times, total {total} seconds. Alert types: {events}. Multiple alert types indicate compound performance issues.
+
+**Recommendation**:
+Queries with multiple alert types need comprehensive redesign, not just one fix:
+- **Stats** + **Distributed**: Missing stats causes bad distribution decisions
+- **Nested Loop** + **Broadcast**: Missing join conditions or type mismatches
+- **Filter** + **Deleted**: Stale data + missing sort keys
+
+Address alerts in order: Stats → Distribution → Sort → Query rewrite.
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/c-optimizing-query-performance.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/top_queries.sql
+
+---
+
+## QP-14: QMR Rule Candidate Identification (P99 Outliers)
+
+**Severity**: LOW
+**Category**: Query Performance
+**Trigger Condition**: Metrics where max value significantly exceeds p99 (pmax_magnitude > 5x)
+**Diagnostic Queries**: H10
+
+**Observation Template**:
+> Service class {service_class}: metric `{qmr_metric}` has p99={p99} but max={pmax} ({pmax_magnitude}x beyond candidate threshold). A QMR rule at {candidate_rule} would catch extreme outliers without affecting normal queries.
+
+**Recommendation**:
+Implement Query Monitoring Rules (QMR) to catch runaway queries before they consume excessive resources. Start with LOG action to assess impact, then escalate to HOP or ABORT.
+
+**Remediation SQL**:
+```sql
+-- Via parameter group WLM JSON configuration:
+-- Add rule to queue: {"query_{qmr_metric}": {candidate_rule}, "action": "log"}
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/wlm_qmr_rule_candidates.sql

@@ -181,3 +181,39 @@ PARQUET;
 **Documentation Source**:
 - https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html
 - https://docs.aws.amazon.com/redshift/latest/mgmt/resizing-cluster.html
+
+---
+
+## MT-07: Table Fragmentation from Concurrent Writes
+
+**Severity**: MEDIUM
+**Category**: Maintenance
+**Trigger Condition**: est_space_gain_blocks > 100 in fragmentation analysis (H9)
+**Diagnostic Queries**: H9
+
+**Observation Template**:
+> Table `{tablename}` has ~{est_space_gain_blocks} excess blocks from fragmentation. Fragmentation occurs when VACUUM overlaps with concurrent write operations, creating partially-filled blocks.
+
+**Recommendation**:
+Defragment tables with significant excess blocks. Options ranked by effectiveness:
+1. Deep copy (CREATE TABLE AS) — complete defragmentation but requires downtime
+2. VACUUM FULL with BOOST — uses all cluster resources, faster but less complete
+3. Schedule VACUUMs during periods with no concurrent writes
+
+**Remediation SQL**:
+```sql
+-- Quick: VACUUM with BOOST
+VACUUM FULL {schema}.{tablename} BOOST;
+
+-- Complete: Deep copy
+BEGIN;
+CREATE TABLE {schema}.{tablename}_defrag (LIKE {schema}.{tablename});
+INSERT INTO {schema}.{tablename}_defrag SELECT * FROM {schema}.{tablename};
+DROP TABLE {schema}.{tablename};
+ALTER TABLE {schema}.{tablename}_defrag RENAME TO {tablename};
+COMMIT;
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminViews/v_fragmentation_info.sql

@@ -309,3 +309,142 @@ VACUUM REINDEX {schema}.{table};
 **Documentation Source**:
 - https://docs.aws.amazon.com/redshift/latest/dg/t_Sorting_data-interleaved.html
 - https://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html
+
+---
+
+## TD-13: Block-Level Distribution Skew
+
+**Severity**: HIGH
+**Category**: Table Design
+**Trigger Condition**: ratio_skew_across_slices > 100% (blocks unevenly distributed)
+**Diagnostic Queries**: H2
+
+**Observation Template**:
+> Table `{schemaname}.{tablename}` has {ratio_skew_across_slices}% block-level skew across slices. Only {pct_slices_populated}% of slices contain data. This indicates severe distribution imbalance at the storage layer.
+
+**Recommendation**:
+Unlike row-level skew (TD-02), block-level skew means some slices store disproportionately more 1MB blocks. Choose a distribution key with higher cardinality, or switch to EVEN distribution for better parallel scan performance.
+
+**Remediation SQL**:
+```sql
+ALTER TABLE {schema}.{tablename} ALTER DISTSTYLE EVEN;
+-- Or choose a better distribution key:
+ALTER TABLE {schema}.{tablename} ALTER DISTSTYLE KEY DISTKEY ({high_cardinality_column});
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-best-dist-key.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/table_inspector.sql
+
+---
+
+## TD-14: Distribution Key Mismatch in INSERT...SELECT Pipelines
+
+**Severity**: MEDIUM
+**Category**: Table Design
+**Trigger Condition**: Source and target tables in INSERT...SELECT have different distribution keys
+**Diagnostic Queries**: H8
+
+**Observation Template**:
+> INSERT...SELECT from `{source}` (distkey: {source_dk}) into `{target}` (distkey: {target_dk}) causes data redistribution. Aligning distribution keys eliminates this overhead.
+
+**Recommendation**:
+When data flows regularly between tables via INSERT...SELECT, align the distribution keys of source and target tables to avoid redistribution during the write operation.
+
+**Remediation SQL**:
+```sql
+-- Align target table's distribution key with source
+ALTER TABLE {target} ALTER DISTSTYLE KEY DISTKEY ({source_dk});
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-best-dist-key.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/insert_into_table_dk_mismatch.sql
+
+---
+
+## TD-15: Unscanned Tables Wasting Storage
+
+**Severity**: LOW
+**Category**: Table Design
+**Trigger Condition**: Tables > 10MB that have never been scanned (0 queries in STL_SCAN history)
+**Diagnostic Queries**: H7
+
+**Observation Template**:
+> {count} tables ({total_mb} MB total) have never been scanned by any query. These may be obsolete, staging leftovers, or incorrectly retained data consuming storage.
+
+**Recommendation**:
+Review unscanned tables for potential removal. These could be:
+- Old staging tables from ETL that were never dropped
+- Tables from deprecated features
+- Test/dev tables in production
+
+Archive to S3 via UNLOAD if unsure, then DROP.
+
+**Remediation SQL**:
+```sql
+-- Archive before dropping
+UNLOAD ('SELECT * FROM {schema}.{table}')
+TO 's3://bucket/archive/{schema}/{table}/'
+IAM_ROLE 'arn:aws:iam::account:role/RedshiftRole' PARQUET;
+
+DROP TABLE {schema}.{table};
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/unscanned_table_summary.sql
+
+---
+
+## TD-16: Sort Key Not Aligned with Predicate Columns
+
+**Severity**: MEDIUM
+**Category**: Table Design
+**Trigger Condition**: Table has predicate columns (used in WHERE) that are not the sort key
+**Diagnostic Queries**: H6
+
+**Observation Template**:
+> Table `{schema}.{table}` is frequently filtered on column `{col_name}` (first used: {first_predicate_use}), but this column is not the sort key. Zone map filtering cannot be leveraged.
+
+**Recommendation**:
+Consider changing the sort key to match the most commonly used predicate column. Redshift tracks which columns are used as predicates in pg_statistic — the sort key should align with the most selective filter patterns.
+
+**Remediation SQL**:
+```sql
+ALTER TABLE {schema}.{table} ALTER SORTKEY ({predicate_column});
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-sort-key.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminScripts/predicate_columns.sql
+
+---
+
+## TD-17: Table Fragmentation (Excess Blocks)
+
+**Severity**: MEDIUM
+**Category**: Table Design
+**Trigger Condition**: est_space_gain_blocks > 100 (significant reclaimable blocks from fragmentation)
+**Diagnostic Queries**: H9
+
+**Observation Template**:
+> Table `{tablename}` has ~{est_space_gain_blocks} excess blocks due to fragmentation. This occurs when concurrent writes overlap with VACUUM operations.
+
+**Recommendation**:
+Defragment the table using a deep copy (CREATE TABLE AS SELECT) or VACUUM with BOOST option during a maintenance window. Fragmentation increases I/O during scans.
+
+**Remediation SQL**:
+```sql
+-- Option 1: VACUUM with BOOST (uses all available resources)
+VACUUM FULL {schema}.{tablename} BOOST;
+
+-- Option 2: Deep copy (complete defragmentation)
+CREATE TABLE {schema}.{tablename}_new AS SELECT * FROM {schema}.{tablename};
+DROP TABLE {schema}.{tablename};
+ALTER TABLE {schema}.{tablename}_new RENAME TO {tablename};
+```
+
+**Documentation Source**:
+- https://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html
+- https://github.com/awslabs/amazon-redshift-utils/blob/master/src/AdminViews/v_fragmentation_info.sql

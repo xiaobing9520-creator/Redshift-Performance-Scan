@@ -24,17 +24,18 @@ Execute all diagnostic queries from `.claude/skills/redshift-scan/references/dia
 - **Category E** (5 queries): Maintenance — vacuum candidates, stats, auto-optimization
 - **Category F** (3 queries): Data loading — COPY performance, errors
 - **Category G** (1 query): Redshift Advisor recommendations
+- **Category H** (10 queries): Enhanced diagnostics from awslabs/amazon-redshift-utils — per-table alerts, block skew, predicate columns, unscanned tables, DK mismatch, fragmentation, QMR candidates
 
 If a query fails, log the error and continue with remaining queries.
 
 ### Phase 3: Rule Evaluation
 Read and evaluate rules from these reference files:
-- `.claude/skills/redshift-scan/references/rules-table-design.md` (TD-01 to TD-12)
-- `.claude/skills/redshift-scan/references/rules-query-performance.md` (QP-01 to QP-10)
+- `.claude/skills/redshift-scan/references/rules-table-design.md` (TD-01 to TD-17)
+- `.claude/skills/redshift-scan/references/rules-query-performance.md` (QP-01 to QP-14)
 - `.claude/skills/redshift-scan/references/rules-workload-management.md` (WL-01 to WL-06)
-- `.claude/skills/redshift-scan/references/rules-maintenance.md` (MT-01 to MT-06)
+- `.claude/skills/redshift-scan/references/rules-maintenance.md` (MT-01 to MT-07)
 - `.claude/skills/redshift-scan/references/rules-cluster-config.md` (CC-01 to CC-03)
-- `.claude/skills/redshift-scan/references/rules-data-loading.md` (DL-01 to DL-03)
+- `.claude/skills/redshift-scan/references/rules-data-loading.md` (DL-01 to DL-04)
 
 For each rule, check if the trigger condition threshold is met in the collected data. Record triggered findings with: rule ID, severity, affected objects, evidence data.
 
