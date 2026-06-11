@@ -1,2 +1,14 @@
 # Local settings (contain user-specific permissions)
 .claude/settings.local.json
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

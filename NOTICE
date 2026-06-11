@@ -1,0 +1,6 @@
+Redshift Performance Scan Skill
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+This project includes queries adapted from awslabs/amazon-redshift-utils
+(https://github.com/awslabs/amazon-redshift-utils), licensed under the
+Apache License 2.0.

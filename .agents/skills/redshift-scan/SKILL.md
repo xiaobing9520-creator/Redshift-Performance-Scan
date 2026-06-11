@@ -8,8 +8,9 @@ description: >
   system tables and evaluates results against 51 AWS best-practice rules.
 license: MIT-0
 compatibility: >
-  Requires awslabs.redshift-mcp-server MCP server with IAM credentials for
-  redshift-data and redshift:GetClusterCredentialsWithIAM permissions.
+  Requires awslabs.redshift-mcp-server MCP server configured with IAM credentials
+  that have redshift-data:ExecuteStatement, DescribeStatement, GetStatementResult,
+  redshift:DescribeClusters, and redshift:GetClusterCredentialsWithIAM permissions.
 metadata:
   author: ChemExpress
   version: "1.0"
@@ -66,7 +67,7 @@ For each rule, check if the trigger condition is met based on the diagnostic dat
 Generate the report following `references/report-template.md`:
 
 1. Executive Summary with overall health score and finding counts by severity
-2. Findings grouped by severity (CRITICAL → HIGH → MEDIUM → LOW)
+2. Findings grouped by severity (CRITICAL > HIGH > MEDIUM > LOW)
 3. Each finding includes: rule ID, evidence data, recommendation, remediation SQL, and AWS documentation URL
 4. Redshift Advisor recommendations (from query G1)
 5. Automatic optimization status summary

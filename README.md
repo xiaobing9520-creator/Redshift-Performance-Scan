@@ -1,14 +1,43 @@
-# Redshift Performance Scan
+# Redshift Performance Scan Skill
 
-A GenAI-powered performance scanning skill that connects to Amazon Redshift via MCP, executes diagnostic queries against system tables, and generates prioritized tuning recommendations based on AWS best practices.
+An open, cross-platform AI agent skill that connects to Amazon Redshift via MCP (Model Context Protocol), executes diagnostic queries against system tables, and generates prioritized tuning recommendations based on AWS best practices.
 
 ## Features
 
-- **32 diagnostic SQL queries** across 7 categories (table design, query performance, WLM, maintenance, cluster config, data loading, advisor)
-- **40 performance rules** with severity levels (CRITICAL/HIGH/MEDIUM/LOW)
+- **42 diagnostic SQL queries** across 8 categories (table design, query performance, WLM, maintenance, cluster config, data loading, advisor, enhanced diagnostics from awslabs/amazon-redshift-utils)
+- **51 performance rules** with severity levels (CRITICAL/HIGH/MEDIUM/LOW)
 - **AWS documentation citations** for every recommendation
 - **Remediation SQL** examples for each finding
-- Works with both **Claude Code** (`/redshift-scan`) and **Kiro**
+- **Cross-platform**: Works with Kiro, Amazon Q Developer, Claude Code, and any [Agent Skills](https://agentskills.io)-compatible assistant
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  AI Coding Assistant (Kiro / Amazon Q / Claude Code / ...)      │
+│                                                                 │
+│  ┌──────────┐  ┌──────────────────┐  ┌───────────────────┐     │
+│  │ SKILL.md │  │ diagnostic-      │  │ rules-*.md        │     │
+│  │ (流程编排) │  │ queries.md       │  │ (51 条规则)        │     │
+│  │          │  │ (42 条诊断SQL)    │  │                   │     │
+│  └────┬─────┘  └────────┬─────────┘  └────────┬──────────┘     │
+│       │                  │                     │                 │
+│       ▼                  ▼                     ▼                 │
+│  Phase 1: Discovery → Phase 2: Collection → Phase 3: Evaluation │
+│                                              │                   │
+│                                              ▼                   │
+│                                    Phase 4: Report Generation    │
+└────────────────────────┬────────────────────────────────────────┘
+                         │ MCP Protocol (stdio)
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  awslabs-redshift-mcp-server (Redshift Data API)                │
+└────────────────────────┬────────────────────────────────────────┘
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Amazon Redshift Cluster (STL_* / STV_* / SVV_* / SVL_*)       │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## Prerequisites
 
@@ -62,23 +91,27 @@ The database user connecting via IAM needs:
 
 ## Usage
 
+### Kiro
+
+Open this project in Kiro. The skill is available via `.kiro/skills/redshift-scan/`.
+Invoke via natural language: "Scan my Redshift cluster `my-cluster-id` database `dev` for performance issues."
+
+### Amazon Q Developer
+
+With MCP configured in `.amazonq/default.json`, ask:
+"Run a performance scan on Redshift cluster `my-cluster-id`."
+
 ### Claude Code
 
 ```bash
-# Navigate to this project directory
 cd Redshift_Performance_Improvement
-
-# Start Claude Code (MCP server auto-starts via .mcp.json)
 claude
-
-# Run the scan
 /redshift-scan my-cluster-id dev
 ```
 
-### Kiro
+### Any Agent Skills-Compatible Assistant
 
-Open this project in Kiro. The skill is available in `.kiro/skills/redshift-scan/`.
-Invoke it with your cluster identifier and database name.
+The skill at `.agents/skills/redshift-scan/SKILL.md` follows the [Agent Skills](https://agentskills.io) open standard and works with any compatible client.
 
 ## Configuration
 
@@ -107,17 +140,32 @@ To change region or profile, edit `.mcp.json`.
 ## Project Structure
 
 ```
-.claude/skills/redshift-scan/
-├── SKILL.md                    # Skill definition (workflow instructions)
-└── references/
-    ├── diagnostic-queries.md   # 42 SQL queries (A-G original + H from awslabs/amazon-redshift-utils)
-    ├── rules-table-design.md   # 17 rules (TD-01..TD-17)
-    ├── rules-query-performance.md  # 14 rules (QP-01..QP-14)
-    ├── rules-workload-management.md # 6 rules (WL-01..WL-06)
-    ├── rules-maintenance.md    # 7 rules (MT-01..MT-07)
-    ├── rules-cluster-config.md # 3 rules (CC-01..CC-03)
-    ├── rules-data-loading.md   # 4 rules (DL-01..DL-04)
-    └── report-template.md      # Output format specification
+.
+├── .agents/skills/redshift-scan/       # Agent Skills standard (cross-platform)
+│   └── SKILL.md
+├── .amazonq/rules/                     # Amazon Q Developer project rules
+│   └── redshift-scan.md
+├── .claude/skills/redshift-scan/       # Claude Code skill + canonical references
+│   ├── SKILL.md
+│   └── references/
+│       ├── diagnostic-queries.md       # 42 SQL queries (Categories A-H)
+│       ├── rules-table-design.md       # 17 rules (TD-01..TD-17)
+│       ├── rules-query-performance.md  # 14 rules (QP-01..QP-14)
+│       ├── rules-workload-management.md # 6 rules (WL-01..WL-06)
+│       ├── rules-maintenance.md        # 7 rules (MT-01..MT-07)
+│       ├── rules-cluster-config.md     # 3 rules (CC-01..CC-03)
+│       ├── rules-data-loading.md       # 4 rules (DL-01..DL-04)
+│       └── report-template.md          # Output format specification
+├── .kiro/                              # Kiro IDE support
+│   ├── steering.md
+│   └── skills/redshift-scan/skill.md
+├── .mcp.json                           # MCP server configuration (shared)
+├── CLAUDE.md                           # Claude Code project context
+├── LICENSE                             # MIT-0
+├── NOTICE                              # Copyright attribution
+├── CODE_OF_CONDUCT.md                  # Amazon Open Source Code of Conduct
+├── CONTRIBUTING.md                     # Contribution guidelines
+└── README.md
 ```
 
 ## Rule Categories
@@ -133,43 +181,37 @@ To change region or profile, edit `.mcp.json`.
 
 ## Rule Sources
 
-Rules are derived from two primary sources:
-
 ### 1. AWS Official Documentation
 - [Redshift Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/best-practices.html)
 - [Table Design Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_designing-tables-best-practices.html)
 - [Query Performance Tuning](https://docs.aws.amazon.com/redshift/latest/dg/c-optimizing-query-performance.html)
 - [Workload Management](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-implementing-workload-management.html)
-- [Automatic Optimization](https://docs.aws.amazon.com/redshift/latest/dg/c_autonomics.html)
 - [Data Loading Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html)
 - [Query Best Practices (Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/welcome.html)
-- [Monitoring Performance](https://docs.aws.amazon.com/redshift/latest/mgmt/metrics.html)
-- [Redshift Spectrum Performance](https://docs.aws.amazon.com/redshift/latest/dg/c-spectrum-external-performance.html)
 
 ### 2. awslabs/amazon-redshift-utils (Apache 2.0)
-- Repository: https://github.com/awslabs/amazon-redshift-utils (2800+ stars)
-- Enhanced diagnostic queries (Category H) adapted from:
-  - `src/AdminScripts/perf_alert.sql` — Per-table performance alert aggregation
-  - `src/AdminScripts/table_inspector.sql` — Block-level distribution skew analysis
-  - `src/AdminScripts/top_queries.sql` — Top queries with alert classification
-  - `src/AdminScripts/copy_performance.sql` — S3 transfer throughput analysis
-  - `src/AdminScripts/missing_table_stats.sql` — Missing stats in EXPLAIN plans
-  - `src/AdminScripts/predicate_columns.sql` — Sort key candidate identification
-  - `src/AdminScripts/unscanned_table_summary.sql` — Wasted storage detection
-  - `src/AdminScripts/insert_into_table_dk_mismatch.sql` — DK mismatch in ETL
-  - `src/AdminScripts/wlm_qmr_rule_candidates.sql` — P99 outlier QMR candidates
-  - `src/AdminViews/v_fragmentation_info.sql` — Table fragmentation estimation
+- Repository: https://github.com/awslabs/amazon-redshift-utils
+- Enhanced diagnostic queries (Category H) adapted from AdminScripts and AdminViews
 
 ## Extending Rules
 
 To add a new rule:
 
-1. Edit the appropriate `rules-*.md` file
-2. Follow the existing rule format:
-   - Rule ID, Severity, Trigger Condition, Threshold
-   - Diagnostic Queries Used (reference IDs from diagnostic-queries.md)
-   - Observation Template, Recommendation, Remediation SQL
-   - Documentation Source (AWS docs URL and/or github.com/awslabs/amazon-redshift-utils path)
+1. Edit the appropriate `rules-*.md` file in `.claude/skills/redshift-scan/references/`
+2. Follow the existing rule format (Rule ID, Severity, Trigger Condition, Diagnostic Queries, Observation Template, Recommendation, Remediation SQL, Documentation Source)
 3. If the rule needs new diagnostic data, add a query to `diagnostic-queries.md`
 
-No code changes needed — the LLM reads and applies rules from markdown.
+No code changes needed — the AI agent reads and applies rules from markdown at runtime.
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE) file.
+
+----
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+SPDX-License-Identifier: MIT-0

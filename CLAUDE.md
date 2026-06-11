@@ -2,8 +2,8 @@
 
 This project provides a GenAI-powered Redshift performance scanning skill that:
 - Connects to Amazon Redshift via the `awslabs-redshift-mcp-server` MCP server
-- Executes 32 diagnostic SQL queries against system tables
-- Evaluates results against 40 codified AWS best practice rules
+- Executes 42 diagnostic SQL queries against system tables
+- Evaluates results against 51 codified AWS best practice rules
 - Generates a prioritized performance tuning report with documentation citations
 
 ## MCP Server

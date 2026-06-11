@@ -1,3 +1,12 @@
+---
+name: redshift-scan
+description: >
+  Scan an Amazon Redshift provisioned cluster for performance issues and generate
+  prioritized tuning recommendations. Use this skill when investigating Redshift
+  query latency, table design problems, WLM contention, maintenance gaps, or
+  data loading inefficiencies.
+---
+
 # Redshift Performance Scan
 
 ## Description
@@ -42,7 +51,7 @@ For each rule, check if the trigger condition threshold is met in the collected 
 ### Phase 4: Report Generation
 Generate the report per `.claude/skills/redshift-scan/references/report-template.md`:
 1. Executive summary with health score
-2. Findings by severity (CRITICAL → HIGH → MEDIUM → LOW)
+2. Findings by severity (CRITICAL > HIGH > MEDIUM > LOW)
 3. Each finding: evidence, recommendation, remediation SQL, AWS documentation link
 4. Advisor recommendations and auto-optimization status
 5. Prioritized next steps

@@ -6,7 +6,7 @@ GenAI-powered Amazon Redshift performance scanning and tuning recommendation sys
 ## Architecture
 - Uses `awslabs-redshift-mcp-server` MCP server for read-only Redshift access
 - Executes diagnostic SQL queries against system tables (STL_*, STV_*, SVV_*, SVL_*)
-- Evaluates results against 40 codified performance rules
+- Evaluates results against 51 codified performance rules
 - Generates prioritized report with AWS documentation citations
 
 ## Key Constraints
@@ -20,3 +20,12 @@ Configured in `.mcp.json` - provides `list_clusters`, `list_databases`, `list_sc
 ## Rules Location
 Performance rules are in `.claude/skills/redshift-scan/references/rules-*.md` files.
 Diagnostic queries are in `.claude/skills/redshift-scan/references/diagnostic-queries.md`.
+
+## Cross-Platform Compatibility
+This project supports multiple AI coding assistants:
+- **Kiro**: `.kiro/skills/redshift-scan/skill.md`
+- **Claude Code**: `.claude/skills/redshift-scan/SKILL.md`
+- **Agent Skills standard**: `.agents/skills/redshift-scan/SKILL.md`
+- **Amazon Q Developer**: `.amazonq/rules/redshift-scan.md`
+
+All share the same canonical reference files in `.claude/skills/redshift-scan/references/`.
