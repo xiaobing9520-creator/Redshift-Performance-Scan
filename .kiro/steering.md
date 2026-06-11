@@ -26,6 +26,6 @@ This project supports multiple AI coding assistants:
 - **Kiro**: `.kiro/skills/redshift-scan/skill.md`
 - **Claude Code**: `.claude/skills/redshift-scan/SKILL.md`
 - **Agent Skills standard**: `.agents/skills/redshift-scan/SKILL.md`
-- **Amazon Q Developer**: `.amazonq/rules/redshift-scan.md`
+- **Amazon Quick Desktop**: `.amazonq/rules/redshift-scan.md`
 
 All share the same canonical reference files in `.claude/skills/redshift-scan/references/`.

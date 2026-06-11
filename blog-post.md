@@ -7,7 +7,7 @@
 
 ## 摘要
 
-Amazon Redshift 的性能调优长期依赖 DBA 的经验积累与手动排查。本文介绍一种基于 AI Agent Skill 的 Redshift 性能巡检方案：遵循 [Agent Skills](https://agentskills.io) 开放标准定义技能，通过 MCP（Model Context Protocol）协议安全连接 Redshift Data API，将 42 条诊断 SQL 和 51 条最佳实践规则编码为可复用的知识资产。该技能支持 Kiro、Amazon Q Developer、Claude Code 及任何兼容 Agent Skills 标准的 AI 编程助手，DBA 可在自己熟悉的工具中一键触发巡检，数分钟内获得覆盖六大维度的优先级报告。
+Amazon Redshift 的性能调优长期依赖 DBA 的经验积累与手动排查。本文介绍一种基于 AI Agent Skill 的 Redshift 性能巡检方案：遵循 [Agent Skills](https://agentskills.io) 开放标准定义技能，通过 MCP（Model Context Protocol）协议安全连接 Redshift Data API，将 42 条诊断 SQL 和 51 条最佳实践规则编码为可复用的知识资产。该技能支持 Kiro、Amazon Quick Desktop、Claude Code 及任何兼容 Agent Skills 标准的 AI 助手，DBA 可在自己熟悉的工具中一键触发巡检，数分钟内获得覆盖六大维度的优先级报告。
 
 ---
 
@@ -32,7 +32,7 @@ Amazon Redshift 的性能调优长期依赖 DBA 的经验积累与手动排查�
 - **排查效率低**：报表查询突然变慢，需要逐一检查 STL_ALERT_EVENT_LOG、SVV_TABLE_INFO、STL_WLM_QUERY 等十余张系统表，拼凑问题全貌。
 - **知识碎片化**：分布键选择、排序键对齐、VACUUM 策略、WLM 队列配置……最佳实践散落在文档不同章节，需结合数据规模做判断。
 - **人工成本高**：一次完整巡检需资深 DBA 花费半天到一天，且依赖个人经验决定检查范围和优先级。
-- **工具碎片化**：团队使用不同的 AI 编程助手（Kiro、Amazon Q、Cursor 等），希望性能巡检能力在任何工具中都能使用。
+- **工具碎片化**：团队使用不同的 AI 助手（Kiro、Amazon Quick、Cursor 等），希望性能巡检能力在任何工具中都能使用。
 
 **核心问题**：能否将 DBA 的巡检知识编码为跨平台可复用的 AI 技能，在任何支持 MCP 的 AI 助手中一键触发？
 
@@ -51,7 +51,7 @@ Amazon Redshift 的性能调优长期依赖 DBA 的经验积累与手动排查�
 
 关键设计决策：
 
-1. **Agent Skills 开放标准**：技能以 `SKILL.md`（YAML frontmatter + Markdown 指令）定义，被 Kiro、Amazon Q Developer、Claude Code 等多个 AI 助手原生支持
+1. **Agent Skills 开放标准**：技能以 `SKILL.md`（YAML frontmatter + Markdown 指令）定义，被 Kiro、Amazon Quick Desktop、Claude Code 等多个 AI 助手原生支持
 2. **MCP 作为标准化数据层**：通过 `awslabs-redshift-mcp-server` 实现安全、只读的数据库访问，同一 `.mcp.json` 配置被所有工具共享
 3. **规则即文档**：51 条规则以 Markdown 描述，新增规则 = 追加文本，无需编译部署
 
@@ -60,7 +60,7 @@ Amazon Redshift 的性能调优长期依赖 DBA 的经验积累与手动排查�
 | AI 助手 | 技能位置 | 项目上下文 | MCP 配置 |
 |---------|---------|-----------|---------|
 | **Kiro** | `.kiro/skills/redshift-scan/skill.md` | `.kiro/steering.md` | `.mcp.json` |
-| **Amazon Q Developer** | `.amazonq/rules/redshift-scan.md` | 同上 | `.amazonq/default.json` 或 `.mcp.json` |
+| **Amazon Quick Desktop** | `.amazonq/rules/redshift-scan.md` | 同上 | `.amazonq/default.json` 或 `.mcp.json` |
 | **Agent Skills 标准** | `.agents/skills/redshift-scan/SKILL.md` | — | `.mcp.json` |
 | **Claude Code** | `.claude/skills/redshift-scan/SKILL.md` | `CLAUDE.md` | `.mcp.json` |
 
@@ -72,7 +72,7 @@ Amazon Redshift 的性能调优长期依赖 DBA 的经验积累与手动排查�
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  AI 编程助手 (Kiro / Amazon Q Developer / ...)                   │
+│  AI 助手 (Kiro / Amazon Quick Desktop / ...)                      │
 │                                                                 │
 │  ┌──────────┐  ┌──────────────────┐  ┌───────────────────┐     │
 │  │ SKILL.md │  │ diagnostic-      │  │ rules-*.md        │     │
@@ -139,7 +139,7 @@ metadata:
 ```
 .
 ├── .agents/skills/redshift-scan/SKILL.md   # 跨平台标准入口
-├── .amazonq/rules/redshift-scan.md         # Amazon Q Developer 规则
+├── .amazonq/rules/redshift-scan.md         # Amazon Quick Desktop 规则
 ├── .claude/skills/redshift-scan/
 │   ├── SKILL.md                            # 含完整 frontmatter
 │   └── references/                         # 规范知识库（单一数据源）
@@ -162,11 +162,11 @@ Kiro 通过 `.kiro/skills/` 目录发现技能，结合 `.kiro/steering.md` 提�
 
 Kiro 自动匹配技能描述、加载完整指令、通过 MCP 执行诊断查询、评估规则、生成报告。
 
-### 4.4 在 Amazon Q Developer 中使用
+### 4.4 在 Amazon Quick Desktop 中使用
 
-Amazon Q Developer 通过 `.amazonq/rules/` 获取项目上下文，通过 MCP 配置连接 Redshift 服务器。在 IDE 聊天中：
+Amazon Quick Desktop 通过 MCP 协议连接数据源，支持 Agent Skills 标准。在桌面助手中直接输入：
 
-> "@workspace 对集群 `chemexpress-prod` 执行 Redshift 性能巡检"
+> "对集群 `chemexpress-prod` 执行 Redshift 性能巡检"
 
 ---
 
@@ -307,7 +307,7 @@ Phase 4: Report       → 生成优先级报告（Markdown）
 
 本方案展示了 **Agent Skills 开放标准 + MCP 协议** 在数据库运维领域的实用模式：
 
-1. **一次编写，跨平台运行**：遵循 Agent Skills 标准，同一技能在 Kiro、Amazon Q Developer、Claude Code 等工具中均可使用
+1. **一次编写，跨平台运行**：遵循 Agent Skills 标准，同一技能在 Kiro、Amazon Quick Desktop、Claude Code 等工具中均可使用
 2. **知识编码而非代码编码**：51 条规则以 Markdown 描述，降低维护门槛
 3. **MCP 作为标准化接入层**：通过 `awslabs-redshift-mcp-server` 实现安全数据访问，无需自建 API
 4. **aws-samples 质量标准**：MIT-0 License、标准化 README、CONTRIBUTING.md、CODE_OF_CONDUCT.md
@@ -329,13 +329,13 @@ Phase 4: Report       → 生成优先级报告（Markdown）
 - [awslabs/amazon-redshift-utils](https://github.com/awslabs/amazon-redshift-utils) — 社区诊断脚本（Apache 2.0）
 - [Amazon Redshift Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/best-practices.html)
 - [Kiro](https://kiro.dev) — AWS AI 编程助手
-- [Amazon Q Developer](https://aws.amazon.com/q/developer/) — AI 开发者工具
+- [Amazon Quick Desktop](https://aws.amazon.com/quick/) — AI 桌面助手
 
 ### 相关产品
 
 - [Amazon Redshift](https://aws.amazon.com/redshift/)
 - [Kiro](https://kiro.dev)
-- [Amazon Q Developer](https://aws.amazon.com/q/developer/)
+- [Amazon Quick Desktop](https://aws.amazon.com/quick/)
 - [AWS Agent Toolkit](https://docs.aws.amazon.com/agent-toolkit/latest/userguide/)
 
 ---

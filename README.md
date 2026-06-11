@@ -8,13 +8,13 @@ An open, cross-platform AI agent skill that connects to Amazon Redshift via MCP 
 - **51 performance rules** with severity levels (CRITICAL/HIGH/MEDIUM/LOW)
 - **AWS documentation citations** for every recommendation
 - **Remediation SQL** examples for each finding
-- **Cross-platform**: Works with Kiro, Amazon Q Developer, Claude Code, and any [Agent Skills](https://agentskills.io)-compatible assistant
+- **Cross-platform**: Works with Kiro, Amazon Quick Desktop, Claude Code, and any [Agent Skills](https://agentskills.io)-compatible assistant
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  AI Coding Assistant (Kiro / Amazon Q / Claude Code / ...)      │
+│  AI Coding Assistant (Kiro / Amazon Quick / Claude Code / ...)   │
 │                                                                 │
 │  ┌──────────┐  ┌──────────────────┐  ┌───────────────────┐     │
 │  │ SKILL.md │  │ diagnostic-      │  │ rules-*.md        │     │
@@ -96,9 +96,9 @@ The database user connecting via IAM needs:
 Open this project in Kiro. The skill is available via `.kiro/skills/redshift-scan/`.
 Invoke via natural language: "Scan my Redshift cluster `my-cluster-id` database `dev` for performance issues."
 
-### Amazon Q Developer
+### Amazon Quick Desktop
 
-With MCP configured in `.amazonq/default.json`, ask:
+With MCP configured, ask in Amazon Quick Desktop:
 "Run a performance scan on Redshift cluster `my-cluster-id`."
 
 ### Claude Code
@@ -143,7 +143,7 @@ To change region or profile, edit `.mcp.json`.
 .
 ├── .agents/skills/redshift-scan/       # Agent Skills standard (cross-platform)
 │   └── SKILL.md
-├── .amazonq/rules/                     # Amazon Q Developer project rules
+├── .amazonq/rules/                     # Amazon Quick Desktop project rules
 │   └── redshift-scan.md
 ├── .claude/skills/redshift-scan/       # Claude Code skill + canonical references
 │   ├── SKILL.md
