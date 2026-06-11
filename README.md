@@ -160,6 +160,8 @@ For full configuration options (Serverless, cross-account, custom endpoints), se
 │   ├── steering.md
 │   └── skills/redshift-scan/skill.md
 ├── .mcp.json                           # MCP server configuration (shared)
+├── docs/
+│   └── RULES_PROVENANCE.md            # Rule-to-documentation mapping
 ├── CLAUDE.md                           # Claude Code project context
 ├── LICENSE                             # MIT-0
 ├── NOTICE                              # Copyright attribution
@@ -179,23 +181,56 @@ For full configuration options (Serverless, cross-account, custom endpoints), se
 | Cluster Config | CC-01 to CC-03 | Node count, disk capacity, result caching |
 | Data Loading | DL-01 to DL-04 | File parallelism, load errors, single-file loads, S3 transfer throughput |
 
-## Rule Sources
+## Rule Sources and Provenance
 
-### 1. AWS Official Documentation
-- [Redshift Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/best-practices.html)
-- [Table Design Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_designing-tables-best-practices.html)
-- [Query Performance Tuning](https://docs.aws.amazon.com/redshift/latest/dg/c-optimizing-query-performance.html)
-- [Workload Management](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-implementing-workload-management.html)
-- [Data Loading Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html)
-- [Query Best Practices (Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/welcome.html)
+All 51 rules are derived from authoritative AWS sources. For the complete mapping of each rule to its source documentation, see **[docs/RULES_PROVENANCE.md](docs/RULES_PROVENANCE.md)**.
 
-### 2. awslabs Redshift MCP Server
+### 1. AWS Official Documentation (33 rules, 65%)
+
+Primary source for rules TD-01 through TD-12, QP-01 through QP-10, WL-01 through WL-06, MT-01 through MT-06, CC-01 through CC-03, and DL-01 through DL-03.
+
+Key documentation pages:
+
+| Document | Rules Derived |
+|----------|--------------|
+| [Choose the best distribution style](https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-best-dist-key.html) | TD-01, TD-02, TD-07, QP-04, QP-06 |
+| [Choose the best sort key](https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-sort-key.html) | TD-03, QP-07, TD-16 |
+| [Vacuuming tables](https://docs.aws.amazon.com/redshift/latest/dg/t_Reclaiming_storage_space202.html) | TD-04, MT-01, MT-05 |
+| [Use automatic compression](https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-use-auto-compression.html) | TD-05 |
+| [Use the smallest possible column size](https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-smallest-column-size.html) | TD-06, TD-09 |
+| [Define PK and FK constraints](https://docs.aws.amazon.com/redshift/latest/dg/c_best-practices-defining-constraints.html) | TD-10 |
+| [Automatic table optimization](https://docs.aws.amazon.com/redshift/latest/dg/c_autonomics.html) | TD-08, MT-04 |
+| [Design queries best practices](https://docs.aws.amazon.com/redshift/latest/dg/c_designing-queries-best-practices.html) | QP-01, QP-02, QP-09, QP-12 |
+| [Implementing WLM](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-implementing-workload-management.html) | WL-01, WL-02, WL-06, QP-05 |
+| [Query monitoring rules](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html) | WL-02, WL-04, QP-14 |
+| [Data loading best practices](https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html) | DL-01, DL-02, DL-03, DL-04, MT-03 |
+| [Prescriptive Guidance — Query Best Practices](https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/welcome.html) | QP-03 |
+
+### 2. awslabs/amazon-redshift-utils (10 rules, 20%)
+
+Source for enhanced diagnostics (Category H queries) that power rules TD-13 through TD-17 and QP-11 through QP-14.
+
+- Repository: https://github.com/awslabs/amazon-redshift-utils (Apache 2.0, 2800+ stars)
+- Scripts used:
+
+| Script | Rules |
+|--------|-------|
+| `src/AdminScripts/table_inspector.sql` | TD-13 (block skew) |
+| `src/AdminScripts/insert_into_table_dk_mismatch.sql` | TD-14 (DK mismatch) |
+| `src/AdminScripts/unscanned_table_summary.sql` | TD-15 (unscanned tables) |
+| `src/AdminScripts/predicate_columns.sql` | TD-16 (predicate alignment) |
+| `src/AdminViews/v_fragmentation_info.sql` | TD-17, MT-07 (fragmentation) |
+| `src/AdminScripts/perf_alert.sql` | QP-12 (per-table alert impact) |
+| `src/AdminScripts/missing_table_stats.sql` | QP-11 (missing stats in EXPLAIN) |
+| `src/AdminScripts/top_queries.sql` | QP-13 (multi-alert queries) |
+| `src/AdminScripts/wlm_qmr_rule_candidates.sql` | QP-14 (QMR candidates) |
+| `src/AdminScripts/copy_performance.sql` | DL-04 (COPY throughput) |
+
+### 3. awslabs Redshift MCP Server
+
 - Documentation: https://awslabs.github.io/mcp/servers/redshift-mcp-server
 - Source: https://github.com/awslabs/mcp
-
-### 3. awslabs/amazon-redshift-utils (Apache 2.0)
-- Repository: https://github.com/awslabs/amazon-redshift-utils
-- Enhanced diagnostic queries (Category H) adapted from AdminScripts and AdminViews
+- Provides the `execute_query`, `list_clusters`, `list_databases`, `list_schemas`, `list_tables`, `list_columns` tools used to collect diagnostic data
 
 ## Extending Rules
 

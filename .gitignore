@@ -5,6 +5,11 @@
 .env
 .env.local
 
+# Scan results (may contain customer data — never commit)
+scan-results/
+*-scan-report.md
+*-performance-report.md
+
 # OS files
 .DS_Store
 Thumbs.db
