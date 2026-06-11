@@ -117,7 +117,7 @@ The skill at `.agents/skills/redshift-scan/SKILL.md` follows the [Agent Skills](
 
 ### MCP Server (.mcp.json)
 
-The Redshift MCP server is pre-configured for us-east-1:
+This project uses the official [awslabs Redshift MCP Server](https://awslabs.github.io/mcp/servers/redshift-mcp-server). Pre-configured for us-east-1:
 
 ```json
 {
@@ -135,7 +135,7 @@ The Redshift MCP server is pre-configured for us-east-1:
 }
 ```
 
-To change region or profile, edit `.mcp.json`.
+For full configuration options (Serverless, cross-account, custom endpoints), see the [official documentation](https://awslabs.github.io/mcp/servers/redshift-mcp-server).
 
 ## Project Structure
 
@@ -189,7 +189,11 @@ To change region or profile, edit `.mcp.json`.
 - [Data Loading Best Practices](https://docs.aws.amazon.com/redshift/latest/dg/c_loading-data-best-practices.html)
 - [Query Best Practices (Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/query-best-practices-redshift/welcome.html)
 
-### 2. awslabs/amazon-redshift-utils (Apache 2.0)
+### 2. awslabs Redshift MCP Server
+- Documentation: https://awslabs.github.io/mcp/servers/redshift-mcp-server
+- Source: https://github.com/awslabs/mcp
+
+### 3. awslabs/amazon-redshift-utils (Apache 2.0)
 - Repository: https://github.com/awslabs/amazon-redshift-utils
 - Enhanced diagnostic queries (Category H) adapted from AdminScripts and AdminViews
 
