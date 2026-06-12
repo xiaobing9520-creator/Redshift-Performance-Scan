@@ -23,7 +23,7 @@ Diagnostic queries are in `.claude/skills/redshift-scan/references/diagnostic-qu
 
 ## Cross-Platform Compatibility
 This project supports multiple AI coding assistants:
-- **Kiro**: `.kiro/skills/redshift-scan/skill.md`
+- **Kiro**: `.kiro/skills/redshift-scan/SKILL.md`
 - **Claude Code**: `.claude/skills/redshift-scan/SKILL.md`
 - **Agent Skills standard**: `.agents/skills/redshift-scan/SKILL.md`
 - **Amazon Quick Desktop**: `.amazonq/rules/redshift-scan.md`

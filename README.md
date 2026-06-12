@@ -93,7 +93,8 @@ The database user connecting via IAM needs:
 
 ### Kiro
 
-Open this project in Kiro. The skill is available via `.kiro/skills/redshift-scan/`.
+Open this project in Kiro. The skill is discovered automatically via `.kiro/skills/redshift-scan/SKILL.md`.
+MCP configuration is at `.kiro/settings/mcp.json`.
 Invoke via natural language: "Scan my Redshift cluster `my-cluster-id` database `dev` for performance issues."
 
 ### Amazon Quick Desktop
@@ -157,8 +158,9 @@ For full configuration options (Serverless, cross-account, custom endpoints), se
 │       ├── rules-data-loading.md       # 4 rules (DL-01..DL-04)
 │       └── report-template.md          # Output format specification
 ├── .kiro/                              # Kiro IDE support
+│   ├── settings/mcp.json              # Kiro MCP configuration
 │   ├── steering.md
-│   └── skills/redshift-scan/skill.md
+│   └── skills/redshift-scan/SKILL.md
 ├── .mcp.json                           # MCP server configuration (shared)
 ├── docs/
 │   └── RULES_PROVENANCE.md            # Rule-to-documentation mapping
